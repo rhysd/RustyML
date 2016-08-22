@@ -2,5 +2,9 @@
 name = "rustyml"
 version = "0.0.1"
 authors = ["rhysd <lin90162@yahoo.co.jp>"]
+description = "MinCaml implementation with Rust"
+license = "MIT"
+repository = "https://github.com/rhysd/rustyml.git"
+keywords = ["programming language", "ML"]
 
 [dependencies]
