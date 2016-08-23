@@ -26,32 +26,189 @@
 //   | Put of t * t * t
 // and fundef = { name : Id.t * Type.t; args : (Id.t * Type.t) list; body : t }
 
-pub type Expr = Box<Expr>;
+#[derive(Debug)]
+pub struct Position {
+    line: i32,
+    col: i32,
+}
+
+// Note:
+// node_struct!(Foo {...}) defines 'struct Foo {...}' with Position member and
+// Foo::new() factory function.
+macro_rules! node_struct {
+    ($n:ident { $($m:ident: $t:ty,)* }) => {
+        #[derive(Debug)]
+        pub struct $n {
+            $($m: $t,)*
+            pos: Position,
+        }
+        impl $n {
+            pub fn new($($m: $t,)* line: i32, col: i32) -> Expr {
+                Expr::new(
+                    Node::$n(
+                        $n {
+                            $($m: $m,)*
+                            pos: Position {line: line, col: col}
+                        }
+                    )
+                )
+            }
+        }
+    }
+}
+
+node_struct!(Unit {});
+
+node_struct!(Bool {
+    value: bool,
+});
+
+node_struct!(Int {
+    value: i32,
+});
+
+node_struct!(Float {
+    value: f64,
+});
+
+node_struct!(Not {
+    child: Expr,
+});
+
+node_struct!(Neg {
+    child: Expr,
+});
+
+node_struct!(Add {
+    lhs: Expr,
+    rhs: Expr,
+});
+
+node_struct!(Sub {
+    lhs: Expr,
+    rhs: Expr,
+});
+
+node_struct!(FNot {
+    child: Expr,
+});
+
+node_struct!(FNeg {
+    child: Expr,
+});
+
+node_struct!(FAdd {
+    lhs: Expr,
+    rhs: Expr,
+});
+
+node_struct!(FSub {
+    lhs: Expr,
+    rhs: Expr,
+});
+
+node_struct!(FMul {
+    lhs: Expr,
+    rhs: Expr,
+});
+
+node_struct!(FDiv {
+    lhs: Expr,
+    rhs: Expr,
+});
+
+node_struct!(Eq {
+    lhs: Expr,
+    rhs: Expr,
+});
+
+node_struct!(LessEq {
+    lhs: Expr,
+    rhs: Expr,
+});
+
+node_struct!(If {
+    cond: Expr,
+    then: Expr,
+    else_: Expr,
+});
+
+node_struct!(Let {
+    name: String,
+    bound: Expr,
+    body: Expr,
+});
+
+node_struct!(Var {
+    name: String,
+});
+
+node_struct!(LetRec {
+    name: String,
+    params: Vec<String>,
+    bound: Expr,
+    body: Expr,
+});
+
+node_struct!(Apply {
+    callee: Expr,
+    args: Vec<Expr>,
+});
+
+node_struct!(Tuple {
+    elements: Vec<Expr>,
+});
+
+node_struct!(LetTuple {
+    names: Vec<String>,
+    bound: Expr,
+    body: Expr,
+});
+
+node_struct!(Array {
+    size: Expr,
+    elem: Expr,
+});
+
+node_struct!(Get {
+    array: Expr,
+    index: Expr,
+});
+
+node_struct!(Put {
+    array: Expr,
+    index: Expr,
+    new_value: Expr,
+});
+
+pub type Expr = Box<Node>;
+
+#[derive(Debug)]
 pub enum Node {
-    Unit,
-    Bool(bool),
-    Int(i32),
-    Float(f64),
-    Not(Expr),
-    Neg(Expr),
-    Add(Expr, Expr),
-    Sub(Expr, Expr),
-    FNot(Expr),
-    FNeg(Expr),
-    FAdd(Expr, Expr),
-    FSub(Expr, Expr),
-    FMul(Expr, Expr),
-    FDiv(Expr, Expr),
-    Eq(Expr, Expr),
-    LessEq(Expr, Expr),
-    If(Expr, Expr, Expr),
-    Let(String, Expr, Expr), // let name = expr in expr
-    Var(String),
-    LetRec(String, Vec<String>, Expr, Expr), // let rec name x y z = expr in expr
-    Apply(Expr, Vec<Expr>),
-    Tuple(Vec<Expr>),
-    LetTuple(Vec<String>, Expr, Expr), // let (x, y, z) = expr in expr
-    Array(Expr, Expr),
-    Get(Expr, Expr),
-    Put(Expr, Expr, Expr),
+    Unit(Unit),
+    Bool(Bool),
+    Int(Int),
+    Float(Float),
+    Not(Not),
+    Neg(Neg),
+    Add(Add),
+    Sub(Sub),
+    FNot(FNot),
+    FNeg(FNeg),
+    FAdd(FAdd),
+    FSub(FSub),
+    FMul(FMul),
+    FDiv(FDiv),
+    Eq(Eq),
+    LessEq(LessEq),
+    If(If),
+    Let(Let),
+    Var(Var),
+    LetRec(LetRec),
+    Apply(Apply),
+    Tuple(Tuple),
+    LetTuple(LetTuple),
+    Array(Array),
+    Get(Get),
+    Put(Put),
 }
