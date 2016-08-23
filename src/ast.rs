@@ -212,3 +212,38 @@ pub enum Node {
     Get(Get),
     Put(Put),
 }
+
+#[test]
+fn test_create_node() {
+    match *Bool::new(true, 1, 2) {
+        Node::Bool(b) => {
+            assert_eq!(b.value, true);
+            assert_eq!(b.pos.line, 1);
+            assert_eq!(b.pos.col, 2);
+        },
+        _ => assert!(false),
+    }
+
+    match *Add::new(Bool::new(true, 1, 2), Unit::new(1, 2), 1, 2) {
+        Node::Add(add) => {
+            match *add.lhs {
+                Node::Bool(b) => {
+                    assert_eq!(b.value, true);
+                    assert_eq!(b.pos.line, 1);
+                    assert_eq!(b.pos.col, 2);
+                },
+                _ => assert!(false),
+            }
+            match *add.rhs {
+                Node::Unit(u) => {
+                    assert_eq!(u.pos.line, 1);
+                    assert_eq!(u.pos.col, 2);
+                },
+                _ => assert!(false),
+            }
+            assert_eq!(add.pos.line, 1);
+            assert_eq!(add.pos.col, 2);
+        },
+        _ => assert!(false),
+    }
+}
