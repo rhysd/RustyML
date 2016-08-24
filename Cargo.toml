@@ -8,3 +8,4 @@ repository = "https://github.com/rhysd/rustyml.git"
 keywords = ["programming language", "ML"]
 
 [dependencies]
+peg = "0.3.0"
