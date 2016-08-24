@@ -1,6 +1,5 @@
 peg_file! grammar("grammar.rustpeg");
 
-use std::path::PathBuf;
 use ast::Expr;
 
 pub type ParseError = grammar::ParseError;

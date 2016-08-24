@@ -1,6 +1,9 @@
+extern crate rustyml;
+
 use std::env;
 use std::path::{PathBuf, Path};
 use std::io::Write;
+use rustyml::compiler::Compiler;
 
 #[derive(Debug,PartialEq)]
 enum Mode {
@@ -148,5 +151,9 @@ fn main() {
         return;
     }
 
-    println!("{:?}", cli);
+    let compiler = Compiler { files: cli.files };
+    match compiler.compile() {
+        Ok(compiled) => println!("{:?}", compiled),
+        Err(error) => println!("{:?}", error),
+    };
 }
