@@ -3,7 +3,8 @@ extern crate rustyml;
 use std::env;
 use std::path::{PathBuf, Path};
 use std::io::Write;
-use rustyml::compiler::Compiler;
+use std::process::exit;
+use rustyml::compiler::{Compiler, CompileError};
 
 #[derive(Debug,PartialEq)]
 enum Mode {
@@ -142,7 +143,7 @@ fn main() {
         Ok(c) => c,
         Err(msg) => {
             errorln!("Error on parsing command line arguments: {}", msg);
-            return;
+            exit(1);
         },
     };
 
@@ -152,8 +153,19 @@ fn main() {
     }
 
     let compiler = Compiler { files: cli.files };
-    match compiler.compile() {
-        Ok(compiled) => println!("{:?}", compiled),
-        Err(error) => println!("{:?}", error),
+    let code = match compiler.compile() {
+        Ok(compiled) => {
+            println!("Success: {:?}", compiled);
+            0
+        },
+        Err(CompileError::ParseError(e)) => {
+            println!("Syntax error:{}:{}: Expected one of {:?}", e.line, e.column, e.expected);
+            2
+        },
+        Err(e) => {
+            println!("Error: {:?}", e);
+            255
+        },
     };
+    exit(code);
 }
