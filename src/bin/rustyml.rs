@@ -48,7 +48,7 @@ fn parse_argv(argv: Vec<String>) -> Result<Cli, String> {
 
         if path.is_absolute() {
             if !path.exists() {
-                return Err("File does not exist: ".to_string() + arg);
+                return Err(format!("File does not exist: {}", arg));
             }
             cli.files.push(path);
             continue;
@@ -58,9 +58,13 @@ fn parse_argv(argv: Vec<String>) -> Result<Cli, String> {
                 .expect("Failed to get current working directory!")
                 .join(path);
         if !path.exists() {
-            return Err("File does not exist: ".to_string() + arg);
+            return Err(format!("File does not exist: {}", arg));
         }
         cli.files.push(path);
+    }
+
+    if !cli.help && cli.files.len() == 0 {
+        return Err("No file target is specified.".to_string());
     }
 
     return Ok(cli);
@@ -87,16 +91,19 @@ fn test_parse_help() {
 
 #[test]
 fn test_parse_mode() {
-    let cli = test_parse!("run").unwrap();
+    let cli = test_parse!("run", file!()).unwrap();
     assert_eq!(cli.mode, Mode::Run);
 
-    let cli = test_parse!("build").unwrap();
+    let cli = test_parse!("build", file!()).unwrap();
     assert_eq!(cli.mode, Mode::Build);
 
     let cli = test_parse!("help").unwrap();
     assert_eq!(cli.mode, Mode::Nop);
 
     let cli = test_parse!("unknown").unwrap();
+    assert_eq!(cli.mode, Mode::Nop);
+
+    let cli = test_parse!("unknown", file!()).unwrap();
     assert_eq!(cli.mode, Mode::Nop);
 }
 
