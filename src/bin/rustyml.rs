@@ -96,7 +96,7 @@ fn test_parse_mode() {
 #[test]
 fn test_parse_path() {
     let this_file = file!().to_string();
-    let cli = parse_argv(vec!["run".to_string(), this_file, this_file]).unwrap();
+    let cli = parse_argv(vec!["run".to_string(), file!().to_string(), file!().to_string()]).unwrap();
     assert_eq!(cli.files.len(), 2);
     assert_eq!(cli.files.first().unwrap().to_str().unwrap(), file!());
 }
