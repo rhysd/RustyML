@@ -2,7 +2,7 @@ use std::env;
 use std::path::{PathBuf, Path};
 use std::io::Write;
 
-#[derive(Debug)]
+#[derive(Debug,PartialEq)]
 enum Mode {
     Nop,
     Build,
@@ -98,14 +98,14 @@ fn test_parse_path() {
     let this_file = file!().to_string();
     let cli = parse_argv(vec!["run".to_string(), this_file, this_file]).unwrap();
     assert_eq!(cli.files.len(), 2);
-    assert_eq!(cli.files.first().unwrap().to_str(), file!());
+    assert_eq!(cli.files.first().unwrap().to_str().unwrap(), file!());
 }
 
 #[test]
 fn test_not_found_error() {
-    let ret = parse_argv(vec!["run".to_string(), "unknown-file-path"]);
+    let ret = parse_argv(vec!["run".to_string(), "unknown-file-path".to_string()]);
     assert!(ret.is_err());
-    let ret = parse_argv(vec!["run".to_string(), "/absolute/path/to/unknown-file-path"]);
+    let ret = parse_argv(vec!["run".to_string(), "/absolute/path/to/unknown-file-path".to_string()]);
     assert!(ret.is_err());
 }
 
