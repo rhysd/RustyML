@@ -66,6 +66,49 @@ fn parse_argv(argv: Vec<String>) -> Result<Cli, String> {
     return Ok(cli);
 }
 
+#[test]
+fn test_parse_help() {
+    let cli = parse_argv(vec!["help".to_string()]).unwrap();
+    assert!(cli.help);
+
+    let cli = parse_argv(vec!["unknown".to_string()]).unwrap();
+    assert!(cli.help);
+
+    let cli = parse_argv(vec!["run".to_string(), "--help".to_string()]).unwrap();
+    assert!(cli.help);
+}
+
+#[test]
+fn test_parse_mode() {
+    let cli = parse_argv(vec!["run".to_string()]).unwrap();
+    assert_eq!(cli.mode, Mode::Run);
+
+    let cli = parse_argv(vec!["build".to_string()]).unwrap();
+    assert_eq!(cli.mode, Mode::Build);
+
+    let cli = parse_argv(vec!["help".to_string()]).unwrap();
+    assert_eq!(cli.mode, Mode::Nop);
+
+    let cli = parse_argv(vec!["unknown".to_string()]).unwrap();
+    assert_eq!(cli.mode, Mode::Nop);
+}
+
+#[test]
+fn test_parse_path() {
+    let this_file = file!().to_string();
+    let cli = parse_argv(vec!["run".to_string(), this_file, this_file]).unwrap();
+    assert_eq!(cli.files.len(), 2);
+    assert_eq!(cli.files.first().unwrap().to_str(), file!());
+}
+
+#[test]
+fn test_not_found_error() {
+    let ret = parse_argv(vec!["run".to_string(), "unknown-file-path"]);
+    assert!(ret.is_err());
+    let ret = parse_argv(vec!["run".to_string(), "/absolute/path/to/unknown-file-path"]);
+    assert!(ret.is_err());
+}
+
 fn help() {
     println!(r#"Usage: rustyml SUBCOMMANDS [OPTIONS] FILES
 
