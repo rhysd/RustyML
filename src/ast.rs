@@ -28,190 +28,167 @@
 
 #[derive(Debug)]
 pub struct Position {
-    line: i32,
-    col: i32,
+    line: u32,
+    col: u32,
 }
 
-// Note:
-// node_struct!(Foo {...}) defines 'struct Foo {...}' with Position member and
-// Foo::new() factory function.
-macro_rules! node_struct {
-    ($n:ident { $($m:ident: $t:ty,)* }) => {
-        #[derive(Debug)]
-        pub struct $n {
-            $($m: $t,)*
-            pos: Position,
-        }
-        impl $n {
-            pub fn new($($m: $t,)* line: i32, col: i32) -> Expr {
-                Expr::new(
-                    Node::$n(
-                        $n {
-                            $($m: $m,)*
-                            pos: Position {line: line, col: col}
-                        }
-                    )
-                )
+macro_rules! node_structs {
+    ($($n:ident { $($m:ident: $t:ty,)* })+) => {
+        $(
+            #[derive(Debug)]
+            pub struct $n {
+                $($m: $t,)*
+                pos: Position,
             }
+            impl $n {
+                pub fn new($($m: $t,)* line: u32, col: u32) -> Expr {
+                    Expr::new(
+                        Node::$n(
+                            $n {
+                                $($m: $m,)*
+                                pos: Position {line: line, col: col}
+                            }
+                        )
+                    )
+                }
+            }
+        )+
+        #[derive(Debug)]
+        pub enum Node {
+            $(
+                $n($n),
+            )+
         }
     }
 }
 
-node_struct!(Unit {});
+node_structs! {
+    Unit {}
 
-node_struct!(Bool {
-    value: bool,
-});
+    Bool {
+        value: bool,
+    }
 
-node_struct!(Int {
-    value: i32,
-});
+    Int {
+        value: i32,
+    }
 
-node_struct!(Float {
-    value: f64,
-});
+    Float {
+        value: f64,
+    }
 
-node_struct!(Not {
-    child: Expr,
-});
+    Not {
+        child: Expr,
+    }
 
-node_struct!(Neg {
-    child: Expr,
-});
+    Neg {
+        child: Expr,
+    }
 
-node_struct!(Add {
-    lhs: Expr,
-    rhs: Expr,
-});
+    Add {
+        lhs: Expr,
+        rhs: Expr,
+    }
 
-node_struct!(Sub {
-    lhs: Expr,
-    rhs: Expr,
-});
+    Sub {
+        lhs: Expr,
+        rhs: Expr,
+    }
 
-node_struct!(FNot {
-    child: Expr,
-});
+    FNot {
+        child: Expr,
+    }
 
-node_struct!(FNeg {
-    child: Expr,
-});
+    FNeg {
+        child: Expr,
+    }
 
-node_struct!(FAdd {
-    lhs: Expr,
-    rhs: Expr,
-});
+    FAdd {
+        lhs: Expr,
+        rhs: Expr,
+    }
 
-node_struct!(FSub {
-    lhs: Expr,
-    rhs: Expr,
-});
+    FSub {
+        lhs: Expr,
+        rhs: Expr,
+    }
 
-node_struct!(FMul {
-    lhs: Expr,
-    rhs: Expr,
-});
+    FMul {
+        lhs: Expr,
+        rhs: Expr,
+    }
 
-node_struct!(FDiv {
-    lhs: Expr,
-    rhs: Expr,
-});
+    FDiv {
+        lhs: Expr,
+        rhs: Expr,
+    }
 
-node_struct!(Eq {
-    lhs: Expr,
-    rhs: Expr,
-});
+    Eq {
+        lhs: Expr,
+        rhs: Expr,
+    }
 
-node_struct!(LessEq {
-    lhs: Expr,
-    rhs: Expr,
-});
+    LessEq {
+        lhs: Expr,
+        rhs: Expr,
+    }
 
-node_struct!(If {
-    cond: Expr,
-    then: Expr,
-    else_: Expr,
-});
+    If {
+        cond: Expr,
+        then: Expr,
+        else_: Expr,
+    }
 
-node_struct!(Let {
-    name: String,
-    bound: Expr,
-    body: Expr,
-});
+    Let {
+        name: String,
+        bound: Expr,
+        body: Expr,
+    }
 
-node_struct!(Var {
-    name: String,
-});
+    Var {
+        name: String,
+    }
 
-node_struct!(LetRec {
-    name: String,
-    params: Vec<String>,
-    bound: Expr,
-    body: Expr,
-});
+    LetRec {
+        name: String,
+        params: Vec<String>,
+        bound: Expr,
+        body: Expr,
+    }
 
-node_struct!(Apply {
-    callee: Expr,
-    args: Vec<Expr>,
-});
+    Apply {
+        callee: Expr,
+        args: Vec<Expr>,
+    }
 
-node_struct!(Tuple {
-    elements: Vec<Expr>,
-});
+    Tuple {
+        elements: Vec<Expr>,
+    }
 
-node_struct!(LetTuple {
-    names: Vec<String>,
-    bound: Expr,
-    body: Expr,
-});
+    LetTuple {
+        names: Vec<String>,
+        bound: Expr,
+        body: Expr,
+    }
 
-node_struct!(Array {
-    size: Expr,
-    elem: Expr,
-});
+    Array {
+        size: Expr,
+        elem: Expr,
+    }
 
-node_struct!(Get {
-    array: Expr,
-    index: Expr,
-});
+    Get {
+        array: Expr,
+        index: Expr,
+    }
 
-node_struct!(Put {
-    array: Expr,
-    index: Expr,
-    new_value: Expr,
-});
+    Put {
+        array: Expr,
+        index: Expr,
+        new_value: Expr,
+    }
+}
 
 pub type Expr = Box<Node>;
-
-#[derive(Debug)]
-pub enum Node {
-    Unit(Unit),
-    Bool(Bool),
-    Int(Int),
-    Float(Float),
-    Not(Not),
-    Neg(Neg),
-    Add(Add),
-    Sub(Sub),
-    FNot(FNot),
-    FNeg(FNeg),
-    FAdd(FAdd),
-    FSub(FSub),
-    FMul(FMul),
-    FDiv(FDiv),
-    Eq(Eq),
-    LessEq(LessEq),
-    If(If),
-    Let(Let),
-    Var(Var),
-    LetRec(LetRec),
-    Apply(Apply),
-    Tuple(Tuple),
-    LetTuple(LetTuple),
-    Array(Array),
-    Get(Get),
-    Put(Put),
-}
 
 #[test]
 fn test_create_node() {
