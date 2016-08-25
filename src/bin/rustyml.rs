@@ -4,7 +4,8 @@ use std::env;
 use std::path::{PathBuf, Path};
 use std::io::Write;
 use std::process::exit;
-use rustyml::compiler::{Compiler, CompileError};
+use rustyml::compiler::compile;
+use rustyml::error::Error;
 
 #[derive(Debug,PartialEq)]
 enum Mode {
@@ -152,20 +153,23 @@ fn main() {
         return;
     }
 
-    let compiler = Compiler { files: cli.files };
-    let code = match compiler.compile() {
+    let exit_code = match compile(&cli.files) {
         Ok(compiled) => {
-            println!("Success: {:?}", compiled);
+            println!("Success: {:?}", compiled.first().unwrap().ast);
             0
         },
-        Err(CompileError::ParseError(e)) => {
-            println!("Syntax error:{}:{}: Expected one of {:?}", e.line, e.column, e.expected);
+        Err(Error::OnParse(e)) => {
+            println!("Syntax error: {}", e);
             2
         },
-        Err(e) => {
-            println!("Error: {:?}", e);
+        Err(Error::OnFileOpen(e)) => {
+            println!("Error on opening a file: {}", e);
+            3
+        },
+        Err(Error::OnFatal(msg)) => {
+            println!("Internal compilation error!: {}", msg);
             255
         },
     };
-    exit(code);
+    exit(exit_code);
 }
