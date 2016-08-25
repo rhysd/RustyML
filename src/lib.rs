@@ -1,4 +1,4 @@
-#![feature(plugin)]
+#![feature(plugin, trace_macros)]
 #![plugin(peg_syntax_ext)]
 
 pub mod error;

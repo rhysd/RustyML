@@ -11,8 +11,12 @@ use ast::Expr;
 
 pub type ParseError = grammar::ParseError;
 
+pub fn set_line_col(ast: Expr) -> Expr {
+    ast
+}
+
 pub fn parse_raw(code: &str) -> grammar::ParseResult<Expr> {
-    grammar::expr(code)
+    grammar::expr(code).map(|ast| set_line_col(ast))
 }
 
 fn read_from(file: &PathBuf) -> io::Result<String> {
@@ -23,11 +27,11 @@ fn read_from(file: &PathBuf) -> io::Result<String> {
 }
 
 pub fn parse(file: &PathBuf) -> Result<TranslationUnit> {
-    let parsed = match read_from(file) {
-        Ok(code) => grammar::expr(code.as_str()),
+    let result = match read_from(file) {
+        Ok(code) => parse_raw(code.as_str()),
         Err(e) => return Err(Error::OnFileOpen(e)),
     };
-    match parsed {
+    match result {
         Ok(parsed) => Ok(TranslationUnit { file: file, ast: parsed }),
         Err(err) => Err(Error::OnParse(err)),
     }
