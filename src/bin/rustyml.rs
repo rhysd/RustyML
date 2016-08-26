@@ -4,14 +4,16 @@ use std::env;
 use std::path::{PathBuf, Path};
 use std::io::Write;
 use std::process::exit;
-use rustyml::compiler::compile;
 use rustyml::error::Error;
+use rustyml::compiler::compile;
+use rustyml::parser::parse;
 
 #[derive(Debug,PartialEq)]
 enum Mode {
     Nop,
     Build,
     Run,
+    Parse,
 }
 
 #[derive(Debug)]
@@ -32,6 +34,7 @@ fn parse_argv(argv: Vec<String>) -> Result<Cli, String> {
     let mode = match argv.get(1).map(|s| s.as_str()) {
         Some("run")   => Mode::Run,
         Some("build") => Mode::Build,
+        Some("parse") => Mode::Parse,
         _             => return Ok(Cli { mode: Mode::Nop, files: vec![], help: true }),
     };
 
@@ -70,6 +73,8 @@ fn parse_argv(argv: Vec<String>) -> Result<Cli, String> {
 
     if !cli.help && cli.files.len() == 0 {
         return Err("No file target is specified.".to_string());
+    } else if cli.mode == Mode::Parse && cli.files.len() > 1 {
+        return Err("Only one file can be specified for 'parse' subcommand".to_string());
     }
 
     return Ok(cli);
@@ -102,6 +107,9 @@ fn test_parse_mode() {
     let cli = test_parse!("build", file!()).unwrap();
     assert_eq!(cli.mode, Mode::Build);
 
+    let cli = test_parse!("parse", file!()).unwrap();
+    assert_eq!(cli.mode, Mode::Parse);
+
     let cli = test_parse!("help").unwrap();
     assert_eq!(cli.mode, Mode::Nop);
 
@@ -127,16 +135,32 @@ fn test_not_found_error() {
     assert!(ret.is_err());
 }
 
+#[test]
+fn test_parse_only() {
+    let ret = test_parse!("parse", file!(), file!());
+    assert!(ret.is_err());
+}
+
 fn help() {
     println!(r#"Usage: rustyml SUBCOMMANDS [OPTIONS] FILES
 
 Subcommand:
     run:   Compile and run.
     build: Only compile.
+    parse: Only parse and dump AST to stdout.
     help:  Show this help.
 
 Options:
     --help: Show this help."#);
+}
+
+fn run(cli: &Cli) -> Result<String, Error> {
+    match cli.mode {
+        Mode::Parse => parse(cli.files.first().unwrap()).map(|t| format!("Parsed:\n{:?}", t.ast)),
+        Mode::Build => compile(&cli.files).map(|c| format!("Success: {:?}", c.first().unwrap().ast)),
+        Mode::Run => unimplemented!(),
+        Mode::Nop => Ok(String::new()),
+    }
 }
 
 fn main() {
@@ -153,9 +177,9 @@ fn main() {
         return;
     }
 
-    let exit_code = match compile(&cli.files) {
-        Ok(compiled) => {
-            println!("Success: {:?}", compiled.first().unwrap().ast);
+    let exit_code = match run(&cli) {
+        Ok(output) => {
+            println!("{}", output);
             0
         },
         Err(Error::OnParse(e)) => {
