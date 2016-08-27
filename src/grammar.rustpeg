@@ -6,21 +6,21 @@ expr -> Expr
     = __ v:add __ { v }
 
 add -> Expr
-    = l:mult __ "+" __ r:mult { ast::FAdd::new(l, r, 0, 0) }
-    / l:mult __ "-" __ r:mult { ast::FSub::new(l, r, 0, 0) }
+    = l:mult __ "+" __ r:mult { ast::FAdd::new(l, r, pos_to_line(input, start_pos)) }
+    / l:mult __ "-" __ r:mult { ast::FSub::new(l, r, pos_to_line(input, start_pos)) }
     / mult
 
 mult -> Expr
-    = l:fact __ "*" __ r:fact { ast::FMul::new(l, r, 0, 0) }
-    / l:fact __ "/" __ r:fact { ast::FDiv::new(l, r, 0, 0) }
+    = l:fact __ "*" __ r:fact { ast::FMul::new(l, r, pos_to_line(input, start_pos)) }
+    / l:fact __ "/" __ r:fact { ast::FDiv::new(l, r, pos_to_line(input, start_pos)) }
     / fact
 
 fact -> Expr
-    = "-" __ v:atom { ast::FNeg::new(v, 0, 0) }
+    = "-" __ v:atom { ast::FNeg::new(v, pos_to_line(input, start_pos)) }
     / atom
 
 atom -> Expr
-    = [0-9]+ ("." [0-9]+)? { ast::Float::new(match_str.parse().unwrap(), 0, 0) }
+    = [0-9]+ ("." [0-9]+)? { ast::Float::new(match_str.parse().unwrap(), pos_to_line(input, start_pos)) }
     / "(" v:expr ")" { v }
 
 __ = [ \t\n\r]*

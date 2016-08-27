@@ -28,8 +28,8 @@
 
 #[derive(Debug)]
 pub struct Position {
-    line: u32,
-    col: u32,
+    line: usize,
+    column: usize,
 }
 
 macro_rules! node_structs {
@@ -41,12 +41,12 @@ macro_rules! node_structs {
                 pos: Position,
             }
             impl $n {
-                pub fn new($($m: $t,)* line: u32, col: u32) -> Expr {
+                pub fn new($($m: $t,)* loc: (usize, usize)) -> Expr {
                     Expr::new(
                         Node::$n(
                             $n {
                                 $($m: $m,)*
-                                pos: Position {line: line, col: col}
+                                pos: Position {line: loc.0, column: loc.1}
                             }
                         )
                     )
@@ -192,34 +192,34 @@ pub type Expr = Box<Node>;
 
 #[test]
 fn test_create_node() {
-    match *Bool::new(true, 1, 2) {
+    match *Bool::new(true, (1, 2)) {
         Node::Bool(b) => {
             assert_eq!(b.value, true);
             assert_eq!(b.pos.line, 1);
-            assert_eq!(b.pos.col, 2);
+            assert_eq!(b.pos.column, 2);
         },
         _ => assert!(false),
     }
 
-    match *Add::new(Bool::new(true, 1, 2), Unit::new(1, 2), 1, 2) {
+    match *Add::new(Bool::new(true, (1, 2)), Unit::new((1, 2)), (1, 2)) {
         Node::Add(add) => {
             match *add.lhs {
                 Node::Bool(b) => {
                     assert_eq!(b.value, true);
                     assert_eq!(b.pos.line, 1);
-                    assert_eq!(b.pos.col, 2);
+                    assert_eq!(b.pos.column, 2);
                 },
                 _ => assert!(false),
             }
             match *add.rhs {
                 Node::Unit(u) => {
                     assert_eq!(u.pos.line, 1);
-                    assert_eq!(u.pos.col, 2);
+                    assert_eq!(u.pos.column, 2);
                 },
                 _ => assert!(false),
             }
             assert_eq!(add.pos.line, 1);
-            assert_eq!(add.pos.col, 2);
+            assert_eq!(add.pos.column, 2);
         },
         _ => assert!(false),
     }
